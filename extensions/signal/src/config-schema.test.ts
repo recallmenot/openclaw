@@ -36,6 +36,37 @@ describe("signal groups schema", () => {
     expect(updated?.channels?.signal).toBeUndefined();
   });
 
+  it("preserves note-to-self root defaults when deleting the default account with named accounts", () => {
+    const updated = signalConfigAdapter.deleteAccount?.({
+      cfg: {
+        channels: {
+          signal: {
+            account: "+15555550123",
+            accountUuid: "123e4567-e89b-12d3-a456-426614174000",
+            ingressMode: "note-to-self",
+            accounts: {
+              work: {
+                account: "+15555550123",
+              },
+            },
+          },
+        },
+      },
+      accountId: "default",
+    });
+
+    expect(updated?.channels?.signal).toMatchObject({
+      accountUuid: "123e4567-e89b-12d3-a456-426614174000",
+      ingressMode: "note-to-self",
+      accounts: {
+        work: {
+          account: "+15555550123",
+        },
+      },
+    });
+    expect(updated?.channels?.signal?.account).toBeUndefined();
+  });
+
   it('rejects dmPolicy="open" without allowFrom "*"', () => {
     const issues = expectInvalidSignalConfig({
       dmPolicy: "open",
