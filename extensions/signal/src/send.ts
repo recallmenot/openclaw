@@ -13,7 +13,7 @@ import { resolveOutboundAttachmentFromUrl } from "openclaw/plugin-sdk/media-runt
 import { requireRuntimeConfig } from "openclaw/plugin-sdk/plugin-config-runtime";
 import { normalizeLowercaseStringOrEmpty } from "openclaw/plugin-sdk/string-coerce-runtime";
 import { normalizeE164 } from "openclaw/plugin-sdk/text-utility-runtime";
-import { discoverSignalAccountUuid } from "./account-store.js";
+import { discoverSignalAccountUuid, resolveConfiguredSignalAccountUuid } from "./account-store.js";
 import { resolveSignalAccount } from "./accounts.js";
 import {
   appendSignalApprovalReactionHintForOutboundMessage,
@@ -206,7 +206,15 @@ export async function sendMessageSignal(
     accountId: opts.accountId,
   });
   const { baseUrl, account } = resolveSignalRpcContext(opts, accountInfo);
-  let accountUuid = opts.accountUuid ?? accountInfo.config.accountUuid;
+  const accountOverridden = Boolean(opts.account?.trim());
+  let accountUuid =
+    opts.accountUuid ??
+    resolveConfiguredSignalAccountUuid({
+      configuredAccount: accountInfo.config.account,
+      configuredAccountUuid: accountInfo.config.accountUuid,
+      effectiveAccount: account,
+      accountOverridden,
+    });
   const discoverAccountUuid = async () => {
     accountUuid ??= await discoverSignalAccountUuid({
       account,

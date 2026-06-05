@@ -18,9 +18,13 @@ vi.mock("./client-adapter.js", () => ({
   signalRpcRequest: (...args: unknown[]) => signalRpcRequestMock(...args),
 }));
 
-vi.mock("./account-store.js", () => ({
-  discoverSignalAccountUuid: discoverSignalAccountUuidMock,
-}));
+vi.mock("./account-store.js", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("./account-store.js")>();
+  return {
+    ...actual,
+    discoverSignalAccountUuid: (...args: unknown[]) => discoverSignalAccountUuidMock(...args),
+  };
+});
 
 vi.mock("node:fs/promises", () => ({
   default: { stat: statMock },
@@ -617,6 +621,46 @@ describe("sendMessageSignal receipts", () => {
       expect.objectContaining({
         targetAuthor: "+15550001111",
         targetAuthorUuid: "123e4567-e89b-12d3-a456-426614174000",
+      }),
+    );
+  });
+
+  it("discovers the account UUID for outbound approval prompts sent from an override account", async () => {
+    signalRpcRequestMock.mockResolvedValueOnce({ timestamp: 1234567800 });
+    discoverSignalAccountUuidMock.mockResolvedValueOnce("999e4567-e89b-12d3-a456-426614174999");
+
+    await sendMessageSignal("+15550002222", "/approve exec-1 allow-once deny", {
+      cfg: {
+        channels: {
+          signal: {
+            accounts: {
+              default: {
+                httpUrl: "http://signal.test",
+                account: "+15550001111",
+                accountUuid: "123e4567-e89b-12d3-a456-426614174000",
+                configPath: "/tmp/signal-cli",
+              },
+            },
+          },
+        },
+      },
+      account: "+15550009999",
+    });
+
+    expect(discoverSignalAccountUuidMock).toHaveBeenCalledWith({
+      account: "+15550009999",
+      configPath: "/tmp/signal-cli",
+    });
+    expect(appendSignalApprovalReactionHintMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        targetAuthor: "+15550009999",
+        targetAuthorUuid: "999e4567-e89b-12d3-a456-426614174999",
+      }),
+    );
+    expect(registerSignalApprovalReactionTargetMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        targetAuthor: "+15550009999",
+        targetAuthorUuid: "999e4567-e89b-12d3-a456-426614174999",
       }),
     );
   });

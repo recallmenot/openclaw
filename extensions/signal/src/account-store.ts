@@ -32,6 +32,34 @@ export function resolveSignalCliAccountsPath(configPath?: string | null): string
   return path.join(base, "data", "accounts.json");
 }
 
+function normalizeSignalAccountForCompare(account?: string | null): string | undefined {
+  const trimmed = account?.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+  return normalizeE164(trimmed) || trimmed.toLowerCase();
+}
+
+export function resolveConfiguredSignalAccountUuid(params: {
+  configuredAccount?: string | null;
+  configuredAccountUuid?: string | null;
+  effectiveAccount?: string | null;
+  accountOverridden?: boolean;
+}): string | undefined {
+  const uuid = params.configuredAccountUuid?.trim();
+  if (!uuid) {
+    return undefined;
+  }
+  if (!params.accountOverridden) {
+    return uuid;
+  }
+  const configuredAccount = normalizeSignalAccountForCompare(params.configuredAccount);
+  const effectiveAccount = normalizeSignalAccountForCompare(params.effectiveAccount);
+  return configuredAccount && effectiveAccount && configuredAccount === effectiveAccount
+    ? uuid
+    : undefined;
+}
+
 export async function discoverSignalAccountUuid(params: {
   account?: string | null;
   configPath?: string | null;

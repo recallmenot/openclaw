@@ -1,7 +1,11 @@
 import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { discoverSignalAccountUuid, resolveSignalCliAccountsPath } from "./account-store.js";
+import {
+  discoverSignalAccountUuid,
+  resolveConfiguredSignalAccountUuid,
+  resolveSignalCliAccountsPath,
+} from "./account-store.js";
 
 describe("signal-cli account store", () => {
   const originalXdgDataHome = process.env.XDG_DATA_HOME;
@@ -12,6 +16,33 @@ describe("signal-cli account store", () => {
     } else {
       process.env.XDG_DATA_HOME = originalXdgDataHome;
     }
+  });
+
+  it("uses configured UUIDs only when they match the effective account override", () => {
+    expect(
+      resolveConfiguredSignalAccountUuid({
+        configuredAccount: "+15550001111",
+        configuredAccountUuid: "123e4567-e89b-12d3-a456-426614174000",
+        effectiveAccount: "+15550001111",
+        accountOverridden: true,
+      }),
+    ).toBe("123e4567-e89b-12d3-a456-426614174000");
+
+    expect(
+      resolveConfiguredSignalAccountUuid({
+        configuredAccount: "+15550001111",
+        configuredAccountUuid: "123e4567-e89b-12d3-a456-426614174000",
+        effectiveAccount: "+15550002222",
+        accountOverridden: true,
+      }),
+    ).toBeUndefined();
+
+    expect(
+      resolveConfiguredSignalAccountUuid({
+        configuredAccountUuid: "123e4567-e89b-12d3-a456-426614174000",
+        accountOverridden: false,
+      }),
+    ).toBe("123e4567-e89b-12d3-a456-426614174000");
   });
 
   it("resolves the default signal-cli accounts file", () => {

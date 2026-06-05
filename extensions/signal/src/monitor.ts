@@ -37,7 +37,7 @@ import {
 } from "openclaw/plugin-sdk/string-coerce-runtime";
 import { normalizeE164 } from "openclaw/plugin-sdk/text-utility-runtime";
 import { waitForTransportReady } from "openclaw/plugin-sdk/transport-ready-runtime";
-import { discoverSignalAccountUuid } from "./account-store.js";
+import { discoverSignalAccountUuid, resolveConfiguredSignalAccountUuid } from "./account-store.js";
 import { resolveSignalAccount } from "./accounts.js";
 import { isSignalNativeApprovalHandlerConfigured } from "./approval-native.js";
 import { signalRpcRequest, signalCheck } from "./client-adapter.js";
@@ -444,9 +444,14 @@ export async function monitorSignalProvider(opts: MonitorSignalOpts = {}): Promi
   const signalConfigPath =
     normalizeOptionalString(opts.configPath) ??
     normalizeOptionalString(accountInfo.config.configPath);
+  const accountOverridden = Boolean(normalizeOptionalString(opts.account));
   const accountUuid =
-    accountInfo.config.accountUuid ??
-    (await discoverSignalAccountUuid({ account, configPath: signalConfigPath }));
+    resolveConfiguredSignalAccountUuid({
+      configuredAccount: accountInfo.config.account,
+      configuredAccountUuid: accountInfo.config.accountUuid,
+      effectiveAccount: account,
+      accountOverridden,
+    }) ?? (await discoverSignalAccountUuid({ account, configPath: signalConfigPath }));
   const dmPolicy = accountInfo.config.dmPolicy ?? "pairing";
   const allowFrom = normalizeAllowList(opts.allowFrom ?? accountInfo.config.allowFrom);
   const groupAllowFrom = normalizeAllowList(
