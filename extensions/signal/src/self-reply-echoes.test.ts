@@ -39,6 +39,24 @@ describe("signal self-reply echoes", () => {
         }),
       ).toBe(true);
 
+      vi.resetModules();
+      const freshEchoes = await import("./self-reply-echoes.js");
+      expect(
+        await freshEchoes.hasSignalSelfReplyEcho({
+          accountId: "default",
+          messageId: "2000",
+          timestamp: 2000,
+          text: "same reply",
+        }),
+      ).toBe(false);
+      expect(
+        await freshEchoes.hasSignalSelfReplyEcho({
+          accountId: "default",
+          messageId: "1000",
+          timestamp: 1000,
+        }),
+      ).toBe(true);
+
       await rememberSignalSelfReplyEcho({
         accountId: "default",
         messageId: "unknown",

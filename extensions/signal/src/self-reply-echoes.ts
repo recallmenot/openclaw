@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { withFileLock, type FileLockOptions } from "openclaw/plugin-sdk/file-lock";
 import { kindFromMime } from "openclaw/plugin-sdk/media-runtime";
 import { resolveStateDir } from "openclaw/plugin-sdk/state-paths";
 
@@ -12,6 +13,10 @@ const ECHO_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const TEXT_ECHO_TTL_MS = 2 * 60 * 1000;
 const TEXT_ECHO_TIMESTAMP_SKEW_MS = 1_000;
 const MEDIA_ECHO_TIMESTAMP_SKEW_MS = 10_000;
+const ECHO_STORE_LOCK_OPTIONS: FileLockOptions = {
+  retries: { retries: 8, factor: 1.5, minTimeout: 20, maxTimeout: 250, randomize: true },
+  stale: 30_000,
+};
 
 type EchoEntry = {
   accountId: string;
@@ -108,6 +113,10 @@ function resolveEchoIds(params: {
   return [...ids];
 }
 
+function persistableEchoIds(ids: string[]): string[] {
+  return ids.filter((id) => !isTextEchoId(id));
+}
+
 function resolveEchoStorePath(): string {
   return path.join(resolveStateDir(), "signal", "self-reply-echoes.json");
 }
@@ -144,6 +153,10 @@ async function writeEchoEntries(entries: EchoEntry[]): Promise<void> {
     mode: 0o600,
   });
   await fs.chmod(storePath, 0o600).catch(() => {});
+}
+
+async function withEchoStoreLock<T>(fn: () => Promise<T>): Promise<T> {
+  return await withFileLock(resolveEchoStorePath(), ECHO_STORE_LOCK_OPTIONS, fn);
 }
 
 function pruneEchoEntries(entries: EchoEntry[], now: number): EchoEntry[] {
@@ -190,13 +203,19 @@ export async function rememberSignalSelfReplyEcho(params: {
   if (params.persist === false) {
     return;
   }
+  const persistentIds = persistableEchoIds(ids);
+  if (persistentIds.length === 0) {
+    return;
+  }
   try {
     const write = echoWriteQueue.then(async () => {
-      const entries = pruneEchoEntries(await readEchoEntries(), createdAt);
-      await writeEchoEntries([
-        ...ids.map((id) => ({ accountId: accountKey, id, createdAt })),
-        ...entries,
-      ]);
+      await withEchoStoreLock(async () => {
+        const entries = pruneEchoEntries(await readEchoEntries(), createdAt);
+        await writeEchoEntries([
+          ...persistentIds.map((id) => ({ accountId: accountKey, id, createdAt })),
+          ...entries,
+        ]);
+      });
     });
     echoWriteQueue = write.catch(() => {});
     await write;

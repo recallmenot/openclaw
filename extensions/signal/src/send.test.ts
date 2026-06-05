@@ -200,7 +200,6 @@ describe("sendMessageSignal receipts", () => {
       messageId: "1234567892",
       timestamp: 1234567892,
       text: "hello self",
-      includeTextWithPrimary: true,
     });
     expect(forgetSignalSelfReplyEchoMock).toHaveBeenCalledWith({
       accountId: "default",
@@ -406,7 +405,6 @@ describe("sendMessageSignal receipts", () => {
       messageId: "1234567893",
       timestamp: 1234567893,
       text: "hello uuid self",
-      includeTextWithPrimary: true,
     });
   });
 

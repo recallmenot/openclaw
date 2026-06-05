@@ -393,7 +393,6 @@ export async function sendMessageSignal(
       messageId,
       timestamp,
       text: fallbackEchoText ?? message,
-      includeTextWithPrimary: Boolean(fallbackEchoText),
     });
   } else if (shouldRememberSelfEcho && fallbackEchoText) {
     await rememberSignalSelfReplyEcho({
