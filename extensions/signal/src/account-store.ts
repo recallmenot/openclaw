@@ -40,9 +40,7 @@ function resolveSignalCliGlobalConfigPaths(): string[] {
   const paths = ["/etc/signal-cli/config.json"];
   const envConfig = process.env.SIGNAL_CLI_CONFIG?.trim();
   if (envConfig) {
-    // Matches signal-cli ConfigLoader: SIGNAL_CLI_CONFIG replaces the XDG/home user config path.
     paths.push(expandHome(envConfig));
-    return paths;
   }
   const xdgConfigHome = process.env.XDG_CONFIG_HOME?.trim();
   paths.push(

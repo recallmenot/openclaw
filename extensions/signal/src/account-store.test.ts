@@ -112,11 +112,15 @@ describe("signal-cli account store", () => {
 
   it("discovers the UUID from signal-cli config dataDir", async () => {
     process.env.SIGNAL_CLI_CONFIG = "/tmp/signal-cli-config.json";
+    process.env.XDG_CONFIG_HOME = "/tmp/xdg-config";
     const readFile = vi.fn(async (filePath: string | URL) => {
       if (String(filePath) === "/tmp/signal-cli-config.json") {
-        return JSON.stringify({ dataDir: "/tmp/signal-cli-data" });
+        return JSON.stringify({ dataDir: "/tmp/signal-cli-env-data" });
       }
-      if (String(filePath) === path.join("/tmp/signal-cli-data", "data", "accounts.json")) {
+      if (String(filePath) === path.join("/tmp/xdg-config", "signal-cli", "config.json")) {
+        return JSON.stringify({ dataDir: "/tmp/signal-cli-user-data" });
+      }
+      if (String(filePath) === path.join("/tmp/signal-cli-user-data", "data", "accounts.json")) {
         return JSON.stringify({
           accounts: [
             {
@@ -138,7 +142,11 @@ describe("signal-cli account store", () => {
     expect(readFile).toHaveBeenCalledWith("/etc/signal-cli/config.json", "utf8");
     expect(readFile).toHaveBeenCalledWith("/tmp/signal-cli-config.json", "utf8");
     expect(readFile).toHaveBeenCalledWith(
-      path.join("/tmp/signal-cli-data", "data", "accounts.json"),
+      path.join("/tmp/xdg-config", "signal-cli", "config.json"),
+      "utf8",
+    );
+    expect(readFile).toHaveBeenCalledWith(
+      path.join("/tmp/signal-cli-user-data", "data", "accounts.json"),
       "utf8",
     );
   });
