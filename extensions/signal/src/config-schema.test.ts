@@ -153,6 +153,8 @@ describe("signal groups schema", () => {
           signal: {
             account: "+15555550123",
             accountUuid: "123e4567-e89b-12d3-a456-426614174000",
+            httpUrl: "http://signal.test",
+            cliPath: "/opt/signal-cli/bin/signal-cli",
             accounts: {
               work: {
                 account: "+15555550123",
@@ -171,10 +173,14 @@ describe("signal groups schema", () => {
     expect(updated?.channels?.signal?.accounts?.work).toMatchObject({
       account: "+15555550123",
       accountUuid: "123e4567-e89b-12d3-a456-426614174000",
+      httpUrl: "http://signal.test",
+      cliPath: "/opt/signal-cli/bin/signal-cli",
     });
     expect(updated?.channels?.signal?.accounts?.inherited).toMatchObject({
       account: "+15555550123",
       accountUuid: "123e4567-e89b-12d3-a456-426614174000",
+      httpUrl: "http://signal.test",
+      cliPath: "/opt/signal-cli/bin/signal-cli",
     });
     expect(updated?.channels?.signal?.accounts?.other?.accountUuid).toBeUndefined();
     expect(updated?.channels?.signal?.accountUuid).toBeUndefined();

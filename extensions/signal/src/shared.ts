@@ -30,6 +30,9 @@ const INHERITED_NOTE_TO_SELF_FIELDS = [
   "cliPath",
   "ingressMode",
 ] as const;
+const INHERITED_SIGNAL_ACCOUNT_FIELDS = INHERITED_NOTE_TO_SELF_FIELDS.filter(
+  (field) => field !== "ingressMode",
+);
 
 type SignalConfigSection = {
   account?: string;
@@ -98,34 +101,28 @@ function materializeInheritedNoteToSelfAccounts(params: {
       const entryAccount = typeof entry.account === "string" ? entry.account : undefined;
       const entryMatchesRootAccount =
         !entryAccount || normalizeE164(entryAccount) === normalizeE164(rootAccount);
-      const inheritedRootUuid = Boolean(
-        originalSignal?.accountUuid && !entry.accountUuid && entryMatchesRootAccount,
-      );
-      if (inheritedNoteToSelf || inheritedRootUuid) {
+      if (inheritedNoteToSelf || entryMatchesRootAccount) {
         const materialized: Record<string, unknown> = { ...entry };
         if (!materialized.account) {
           materialized.account = rootAccount;
         }
-        if (inheritedNoteToSelf) {
-          for (const field of INHERITED_NOTE_TO_SELF_FIELDS) {
-            if (field in materialized) {
-              continue;
-            }
-            if (
-              field === "accountUuid" &&
-              normalizeE164(
-                typeof materialized.account === "string" ? materialized.account : "",
-              ) !== normalizeE164(rootAccount)
-            ) {
-              continue;
-            }
-            const value = originalSignal?.[field];
-            if (value !== undefined) {
-              materialized[field] = value;
-            }
+        for (const field of inheritedNoteToSelf
+          ? INHERITED_NOTE_TO_SELF_FIELDS
+          : INHERITED_SIGNAL_ACCOUNT_FIELDS) {
+          if (field in materialized) {
+            continue;
           }
-        } else if (originalSignal?.accountUuid) {
-          materialized.accountUuid = originalSignal.accountUuid;
+          if (
+            field === "accountUuid" &&
+            normalizeE164(typeof materialized.account === "string" ? materialized.account : "") !==
+              normalizeE164(rootAccount)
+          ) {
+            continue;
+          }
+          const value = originalSignal?.[field];
+          if (value !== undefined) {
+            materialized[field] = value;
+          }
         }
         const hasChanged = INHERITED_NOTE_TO_SELF_FIELDS.some(
           (field) => materialized[field] !== entry[field],
