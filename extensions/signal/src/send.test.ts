@@ -239,7 +239,6 @@ describe("sendMessageSignal receipts", () => {
       messageId: "unknown",
       timestamp: undefined,
       text: "actual sent body",
-      persistText: true,
     });
   });
 
@@ -383,7 +382,6 @@ describe("sendMessageSignal receipts", () => {
       accountIdentity: "+15550001111",
       messageId: "unknown",
       text: "hello invalid timestamp",
-      persist: false,
     });
   });
 
@@ -438,7 +436,6 @@ describe("sendMessageSignal receipts", () => {
       messageId: "unknown",
       timestamp: undefined,
       text: "<media:image:image/png:4321>",
-      persistText: true,
     });
     expect(rememberSignalSelfReplyEchoMock).toHaveBeenCalledWith({
       accountId: "default",
@@ -446,7 +443,6 @@ describe("sendMessageSignal receipts", () => {
       messageId: "unknown",
       timestamp: undefined,
       text: "<media:image>",
-      persistText: true,
     });
   });
 
@@ -478,7 +474,6 @@ describe("sendMessageSignal receipts", () => {
       messageId: "unknown",
       timestamp: undefined,
       text: "<media:attachment>",
-      persistText: true,
     });
   });
 

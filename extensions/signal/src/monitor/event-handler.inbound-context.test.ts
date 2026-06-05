@@ -1421,7 +1421,7 @@ describe("signal createSignalEventHandler inbound context", () => {
     expect(dispatchInboundMessageMock).not.toHaveBeenCalled();
   });
 
-  it("drops persisted self-reply echoes in note-to-self mode", async () => {
+  it("drops remembered self-reply echoes in note-to-self mode", async () => {
     hasSignalSelfReplyEchoMock.mockResolvedValueOnce(true);
     const handler = createSignalEventHandler(
       createBaseSignalEventHandlerDeps({

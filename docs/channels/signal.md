@@ -113,6 +113,7 @@ Behavior:
 - Use `dmPolicy: "disabled"` if no external Signal user should be able to request pairing.
 - Use the default `dmPolicy: "pairing"` only when external Signal users should be able to request pairing with this account.
 - Use native `signal-cli` mode when possible. Container wrappers have historically lagged behind native `signal-cli` on Note to Self receive payloads.
+- OpenClaw remembers its own Note to Self replies only in memory. It intentionally does not persist self-reply replay markers across gateway restarts, because that would overfit the rare edge case of an in-flight Signal sync echo during a short OpenClaw restart.
 
 ## Setup path A: link existing Signal account (QR)
 
