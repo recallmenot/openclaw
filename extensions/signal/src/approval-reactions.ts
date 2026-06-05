@@ -214,7 +214,8 @@ function normalizeSignalApprovalTargetAuthorKey(value: string): string | null {
     return uuid ? `uuid:${uuid}` : null;
   }
   if (looksLikeUuid(withoutSignalPrefix)) {
-    return `uuid:${normalizeSignalUuidForCompare(withoutSignalPrefix)}`;
+    const uuid = normalizeSignalUuidForCompare(withoutSignalPrefix);
+    return uuid ? `uuid:${uuid}` : null;
   }
   return normalizeE164(withoutSignalPrefix);
 }

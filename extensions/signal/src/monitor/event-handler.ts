@@ -741,10 +741,16 @@ export function createSignalEventHandler(deps: SignalEventHandlerDeps) {
         [
           isOwnReactionSender && deps.account ? normalizeE164(deps.account) : null,
           isOwnReactionSender && deps.accountUuid
-            ? `uuid:${normalizeSignalUuidForCompare(deps.accountUuid)}`
+            ? (() => {
+                const uuid = normalizeSignalUuidForCompare(deps.accountUuid);
+                return uuid ? `uuid:${uuid}` : null;
+              })()
             : null,
           params.sender.kind === "uuid"
-            ? `uuid:${normalizeSignalUuidForCompare(params.sender.raw)}`
+            ? (() => {
+                const uuid = normalizeSignalUuidForCompare(params.sender.raw);
+                return uuid ? `uuid:${uuid}` : null;
+              })()
             : formatSignalSenderId(params.sender),
         ].filter((id): id is string => Boolean(id)),
       ),
@@ -756,8 +762,9 @@ export function createSignalEventHandler(deps: SignalEventHandlerDeps) {
       if (accountConversationKey) {
         conversationKeys.add(accountConversationKey);
       }
-      const accountUuidConversationKey = deps.accountUuid
-        ? resolveSignalApprovalConversationKey(`signal:${deps.accountUuid}`)
+      const normalizedAccountUuid = normalizeSignalUuidForCompare(deps.accountUuid);
+      const accountUuidConversationKey = normalizedAccountUuid
+        ? resolveSignalApprovalConversationKey(`signal:${normalizedAccountUuid}`)
         : undefined;
       if (accountUuidConversationKey) {
         conversationKeys.add(accountUuidConversationKey);

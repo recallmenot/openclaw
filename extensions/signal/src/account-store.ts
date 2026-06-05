@@ -85,8 +85,8 @@ export function resolveConfiguredSignalAccountUuid(params: {
   effectiveAccount?: string | null;
   accountOverridden?: boolean;
 }): string | undefined {
-  const uuid = params.configuredAccountUuid?.trim();
-  if (!uuid) {
+  const uuid = params.configuredAccountUuid?.trim().replace(/^uuid:/i, "");
+  if (!normalizeSignalUuidForCompare(uuid)) {
     return undefined;
   }
   if (!params.accountOverridden) {

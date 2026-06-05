@@ -6,6 +6,10 @@ import { signalConfigAdapter } from "./shared.js";
 function expectValidSignalConfig(config: unknown) {
   const res = SignalConfigSchema.safeParse(config);
   expect(res.success).toBe(true);
+  if (!res.success) {
+    throw new Error("expected Signal config to be valid");
+  }
+  return res.data;
 }
 
 function expectInvalidSignalConfig(config: unknown) {
@@ -233,9 +237,18 @@ describe("signal groups schema", () => {
     }
   });
 
-  it("rejects non-canonical accountUuid values", () => {
-    expectInvalidSignalConfig({ accountUuid: "uuid:a1b2c3d4-e5f6-7890-abcd-ef1234567890" });
-    expectInvalidSignalConfig({ accountUuid: " a1b2c3d4-e5f6-7890-abcd-ef1234567890 " });
+  it("keeps accountUuid parse-compatible with shipped string configs", () => {
+    const prefixed = expectValidSignalConfig({
+      accountUuid: "uuid:a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    });
+    const padded = expectValidSignalConfig({
+      accountUuid: " a1b2c3d4-e5f6-7890-abcd-ef1234567890 ",
+    });
+    const legacy = expectValidSignalConfig({ accountUuid: "legacy copied sender id" });
+
+    expect(prefixed.accountUuid).toBe("uuid:a1b2c3d4-e5f6-7890-abcd-ef1234567890");
+    expect(padded.accountUuid).toBe(" a1b2c3d4-e5f6-7890-abcd-ef1234567890 ");
+    expect(legacy.accountUuid).toBe("legacy copied sender id");
   });
 
   it("accepts note-to-self ingress mode", () => {

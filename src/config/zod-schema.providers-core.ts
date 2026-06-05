@@ -1117,13 +1117,6 @@ const SignalGroupEntrySchema = z
 
 const SignalGroupsSchema = z.record(z.string(), SignalGroupEntrySchema.optional()).optional();
 
-const SignalAccountUuidSchema = z
-  .string()
-  .regex(
-    /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}|[0-9a-fA-F]{32})$/,
-    'Signal accountUuid must be a bare UUID such as "123e4567-e89b-12d3-a456-426614174000"',
-  );
-
 export const SignalAccountSchemaBase = z
   .object({
     name: z.string().optional(),
@@ -1132,7 +1125,7 @@ export const SignalAccountSchemaBase = z
     enabled: z.boolean().optional(),
     configWrites: z.boolean().optional(),
     account: z.string().optional(),
-    accountUuid: SignalAccountUuidSchema.optional(),
+    accountUuid: z.string().optional(),
     ingressMode: z.enum(["standard", "note-to-self"]).optional(),
     configPath: z.string().optional(),
     httpUrl: z.string().optional(),

@@ -14,7 +14,8 @@ function normalizeSignalApproverId(value: string | number): string | undefined {
     return undefined;
   }
   if (looksLikeUuid(normalized)) {
-    return `uuid:${normalizeSignalUuidForCompare(normalized)}`;
+    const uuid = normalizeSignalUuidForCompare(normalized);
+    return uuid ? `uuid:${uuid}` : undefined;
   }
   const e164 = normalizeE164(normalized);
   return e164.length > 1 ? e164 : undefined;

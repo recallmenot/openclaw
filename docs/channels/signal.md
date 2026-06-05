@@ -47,15 +47,15 @@ Minimal config:
 
 Field reference:
 
-| Field         | Description                                                                    |
-| ------------- | ------------------------------------------------------------------------------ |
-| `account`     | Linked Signal account phone number in E.164 format (`+15551234567`)            |
-| `accountUuid` | Optional linked account UUID override; usually discovered from signal-cli data |
-| `ingressMode` | `standard` or `note-to-self`; use `note-to-self` for self-chat operation       |
-| `cliPath`     | Path to `signal-cli` (`signal-cli` if on `PATH`)                               |
-| `configPath`  | signal-cli config dir passed as `--config`                                     |
-| `dmPolicy`    | DM access policy (`pairing`, `allowlist`, `open`, `disabled`)                  |
-| `allowFrom`   | Phone numbers or `uuid:<id>` values allowed to DM or pair, depending on policy |
+| Field         | Description                                                                         |
+| ------------- | ----------------------------------------------------------------------------------- |
+| `account`     | Linked Signal account phone number in E.164 format (`+15551234567`)                 |
+| `accountUuid` | Optional linked account UUID override; usually auto-discovered from signal-cli data |
+| `ingressMode` | `standard` or `note-to-self`; use `note-to-self` for self-chat operation            |
+| `cliPath`     | Path to `signal-cli` (`signal-cli` if on `PATH`)                                    |
+| `configPath`  | signal-cli config dir passed as `--config`                                          |
+| `dmPolicy`    | DM access policy (`pairing`, `allowlist`, `open`, `disabled`)                       |
+| `allowFrom`   | Phone numbers or `uuid:<id>` values allowed to DM or pair, depending on policy      |
 
 ## What it is
 
@@ -86,7 +86,7 @@ Disable with:
 
 Use this when you do not want to dedicate a second Signal number to OpenClaw. Link your personal Signal account with `signal-cli`, then write to yourself in Signal.
 
-Note to Self mode requires your linked account phone number. OpenClaw normally discovers the matching Signal account UUID from signal-cli's account store (`data/accounts.json`) at runtime, so you do not need to store the UUID in OpenClaw config. Set `accountUuid` only as an override when your signal-cli account store is unavailable or nonstandard.
+Note to Self mode requires your linked account phone number. OpenClaw normally discovers the matching Signal account UUID from signal-cli's account store (`data/accounts.json`) at runtime, so you do not need to store the UUID in OpenClaw config. Set `accountUuid` only as an override when your signal-cli account store is unavailable or nonstandard. Prefer a bare UUID such as `123e4567-e89b-12d3-a456-426614174000`; older `uuid:<id>` values still parse for upgrade compatibility and are normalized at runtime.
 
 Recommended config:
 
@@ -418,7 +418,7 @@ Provider options:
 - `channels.signal.enabled`: enable/disable channel startup.
 - `channels.signal.apiMode`: `auto | native | container` (default: auto). See [Container mode](#container-mode-bbernhardsignal-cli-rest-api).
 - `channels.signal.account`: E.164 for the bot account.
-- `channels.signal.accountUuid`: optional Signal account UUID for self-message detection and approval reaction targeting.
+- `channels.signal.accountUuid`: optional Signal account UUID override for self-message detection and approval reaction targeting. Prefer a bare UUID; `uuid:<id>` remains accepted for upgrade compatibility.
 - `channels.signal.ingressMode`: `standard | note-to-self` (default: standard). `note-to-self` accepts self-chat messages from the linked Signal account.
 - `channels.signal.cliPath`: path to `signal-cli`.
 - `channels.signal.configPath`: optional `signal-cli --config` directory.
