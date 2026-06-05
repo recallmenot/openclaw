@@ -158,6 +158,38 @@ describe("signal createSignalEventHandler inbound context", () => {
     expect(contextWithBody.Body ?? "").not.toContain("[from:");
   });
 
+  it("passes the runtime configPath override when delivering inbound replies", async () => {
+    const deliverRepliesMock = vi.fn(async () => undefined);
+    dispatchInboundMessageMock.mockImplementationOnce(async (params: any) => {
+      params.dispatcher.sendFinalReply({ text: "reply from agent" });
+      await params.dispatcher.waitForIdle();
+      return { queuedFinal: false, counts: { tool: 0, block: 0, final: 1 } };
+    });
+    const handler = createSignalEventHandler(
+      createBaseSignalEventHandlerDeps({
+        cfg: { messages: { inbound: { debounceMs: 0 } } } as any,
+        configPath: "/tmp/active-signal-cli",
+        deliverReplies: deliverRepliesMock,
+        historyLimit: 0,
+      }),
+    );
+
+    await handler(
+      createSignalReceiveEvent({
+        dataMessage: {
+          message: "hi",
+          attachments: [],
+        },
+      }),
+    );
+
+    expect(deliverRepliesMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        configPath: "/tmp/active-signal-cli",
+      }),
+    );
+  });
+
   it("normalizes direct chat To/OriginatingTo targets to canonical Signal ids", async () => {
     const handler = createSignalEventHandler(
       createBaseSignalEventHandlerDeps({
@@ -1050,6 +1082,50 @@ describe("signal createSignalEventHandler inbound context", () => {
       }),
     );
     expect(dispatchInboundMessageMock).not.toHaveBeenCalled();
+  });
+
+  it("emits generic reaction notifications for note-to-self sync reactions", async () => {
+    const handler = createSignalEventHandler(
+      createBaseSignalEventHandlerDeps({
+        cfg: {
+          messages: { inbound: { debounceMs: 0 } },
+          channels: { signal: { dmPolicy: "open", allowFrom: ["*"] } },
+        } as any,
+        account: "+15550001111",
+        ingressMode: "note-to-self",
+        reactionMode: "own",
+        isSignalReactionMessage: (reaction): reaction is SignalReactionMessage => Boolean(reaction),
+        shouldEmitSignalReactionNotification: () => true,
+        resolveSignalReactionTargets: () => [
+          { kind: "phone", id: "+15550001111", display: "+15550001111" },
+        ],
+        buildSignalReactionSystemEventText: () => "self reaction added",
+        historyLimit: 0,
+      }),
+    );
+
+    await handler(
+      createSignalReceiveEvent({
+        sourceNumber: "+15550001111",
+        syncMessage: {
+          sentMessage: {
+            destinationNumber: "+15550001111",
+            timestamp: 1700000000107,
+            reaction: {
+              emoji: "❤️",
+              targetAuthor: "+15550001111",
+              targetSentTimestamp: 1700000000100,
+            },
+          },
+        },
+      }),
+    );
+
+    expect(dispatchInboundMessageMock).not.toHaveBeenCalled();
+    expect(enqueueSystemEventMock).toHaveBeenCalledWith("self reaction added", {
+      sessionKey: "agent:main:main",
+      contextKey: "signal:reaction:added:1700000000100:+15550001111:❤️",
+    });
   });
 
   it("accepts note-to-self sync messages from the configured Signal account", async () => {

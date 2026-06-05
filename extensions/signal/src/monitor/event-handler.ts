@@ -531,6 +531,7 @@ export function createSignalEventHandler(deps: SignalEventHandlerDeps) {
           baseUrl: deps.baseUrl,
           account: deps.account,
           accountUuid: deps.accountUuid,
+          configPath: deps.configPath,
           accountId: deps.accountId,
           runtime: deps.runtime,
           maxBytes: deps.mediaMaxBytes,
@@ -704,7 +705,6 @@ export function createSignalEventHandler(deps: SignalEventHandlerDeps) {
     senderDisplay: string;
     reaction: SignalReactionMessage;
     hasBodyContent: boolean;
-    suppressNotification?: boolean;
     accessDecision: { decision: "allow" | "block" | "pairing"; reasonCode: string };
   }): Promise<boolean> {
     if (params.hasBodyContent) {
@@ -798,9 +798,6 @@ export function createSignalEventHandler(deps: SignalEventHandlerDeps) {
       logVerbose(
         `Blocked signal reaction sender ${params.senderDisplay} (${params.accessDecision.reasonCode})`,
       );
-      return true;
-    }
-    if (params.suppressNotification) {
       return true;
     }
     const targets = deps.resolveSignalReactionTargets(params.reaction);
@@ -961,7 +958,6 @@ export function createSignalEventHandler(deps: SignalEventHandlerDeps) {
         senderDisplay,
         reaction,
         hasBodyContent,
-        suppressNotification: noteToSelfOwnMessage && "syncMessage" in resolvedEnvelope,
         accessDecision: senderAccess,
       }))
     ) {
