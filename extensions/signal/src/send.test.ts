@@ -328,6 +328,35 @@ describe("sendMessageSignal receipts", () => {
     });
   });
 
+  it("clears memory-only pre-send self-echo markers when Signal RPC send fails", async () => {
+    signalRpcRequestMock.mockRejectedValueOnce(new Error("Signal RPC -32602: Invalid params"));
+
+    await expect(
+      sendMessageSignal("+15550001111", "hello rpc failed self", {
+        cfg: {
+          channels: {
+            signal: {
+              accounts: {
+                default: {
+                  httpUrl: "http://signal.test",
+                  account: "+15550001111",
+                  ingressMode: "note-to-self",
+                },
+              },
+            },
+          },
+        },
+      }),
+    ).rejects.toThrow("Signal RPC -32602");
+
+    expect(forgetSignalSelfReplyEchoMock).toHaveBeenCalledWith({
+      accountId: "default",
+      accountIdentity: "+15550001111",
+      messageId: "unknown",
+      text: "hello rpc failed self",
+    });
+  });
+
   it("keeps memory-only pre-send self-echo markers when Signal REST send returns an invalid timestamp", async () => {
     signalRpcRequestMock.mockRejectedValueOnce(
       new Error("Signal REST send returned invalid timestamp"),

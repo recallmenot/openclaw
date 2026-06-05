@@ -73,7 +73,9 @@ function isDefiniteSignalSendFailure(error: unknown): boolean {
   if (!(error instanceof Error)) {
     return false;
   }
-  return /\b(?:ECONNREFUSED|ENOTFOUND|EAI_AGAIN)\b|^Signal REST \d{3}:/i.test(error.message);
+  return /\b(?:ECONNREFUSED|ENOTFOUND|EAI_AGAIN)\b|^Signal REST \d{3}:|^Signal RPC -?\d+:/i.test(
+    error.message,
+  );
 }
 
 function isSignalUuidRecipient(value: string): boolean {
